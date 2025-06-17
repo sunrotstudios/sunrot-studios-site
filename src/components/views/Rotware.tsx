@@ -1,414 +1,289 @@
 import { FC, useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import { gsap } from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import {
+  DndContext,
+  closestCenter,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  TouchSensor,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  useDraggable,
+} from '@dnd-kit/core';
 import Navigation from '../ui/Navigation';
-import { useContentAnimations } from '../../hooks/useContentAnimations';
-import AnimatedHeading from '../ui/AnimatedHeading';
 
-gsap.registerPlugin(ScrollTrigger);
+const FloatingClipArt: FC<{ src: string; className?: string }> = ({ src, className = "" }) => (
+  <div 
+    className={`absolute pointer-events-none ${className}`}
+    style={{ 
+      animation: 'float 7s ease-in-out infinite alternate',
+      top: `${Math.random() * 60 + 10}%`,
+      left: `${Math.random() * 60 + 10}%`,
+    }}
+  >
+    <div className="w-8 h-8 bg-gray-300 border border-black flex items-center justify-center text-xs">
+      SVG
+    </div>
+  </div>
+);
 
-const Rotware: FC = () => {
-  useContentAnimations();
-  const [expandedProject, setExpandedProject] = useState<string | null>(null);
-  
-  const projects = [
-    {
-      id: "decay-engine",
-      title: "DECAY ENGINE",
-      description: "Software that intentionally breaks itself over time. A progressive degradation algorithm that corrupts pixels and content based on temporal decay patterns, making entropy a creative force.",
-      status: "IN DEVELOPMENT",
-      mediaUrl: "/src/assets/media/digital-woman.gif",
-      details: {
-        techStack: ["React", "WebGL", "GLSL Shaders", "Canvas API"],
-        team: ["Visual Systems Team", "Algorithm Research"],
-        timeline: "Q2 2025 Beta Release"
-      }
-    },
-    {
-      id: "anti-algorithm", 
-      title: "ANTI-ALGORITHM",
-      description: "Finding what the feed doesn't want you to see. An inverse discovery mechanism that surfaces artists with zero engagement scores and null algorithmic reach, revealing hidden creativity.",
-      status: "BETA TESTING",
-      mediaUrl: "/src/assets/media/color-lump.gif",
-      details: {
-        techStack: ["Node.js", "Graph Theory", "ML Inverse Models", "API Scraping"],
-        team: ["Data Science Team", "Artist Relations"],
-        timeline: "Live Testing Phase"
-      }
-    },
-    {
-      id: "xerox-simulator",
-      title: "XEROX SIMULATOR",
-      description: "Making pixels feel like analog degradation. Photocopy distortion filters that add grain, contrast, and ink bleed to simulate the warmth of analog reproduction processes.",
-      status: "LIVE",
-      mediaUrl: "/src/assets/media/rorshack.gif",
-      details: {
-        techStack: ["WebGL", "Image Processing", "CSS Filters", "SVG Patterns"],
-        team: ["Visual Effects Team"],
-        timeline: "Production Ready"
-      }
-    },
-    {
-      id: "temporal-glitch",
-      title: "TEMPORAL GLITCH",
-      description: "Time-based corruption of digital artifacts. A framework for introducing controlled chaos into stable systems, allowing entropy to become a creative force in real-time applications.",
-      status: "CONCEPT",
-      mediaUrl: "/src/assets/media/infinite-hallway.gif",
-      details: {
-        techStack: ["Time Series", "Chaos Theory", "Real-time Processing", "GPU Compute"],
-        team: ["Research & Development"],
-        timeline: "Conceptual Phase"
-      }
-    }
-  ];
+interface TileData {
+  id: string;
+  position: { x: number; y: number };
+  backgroundColor: string;
+  sticker: string;
+  caption: string;
+  className?: string;
+}
 
-  useEffect(() => {
-    // ScrollTrigger implementation for project panels
-    projects.forEach((project, index) => {
-      const panel = document.querySelector(`[data-project-panel="${project.id}"]`) as HTMLElement;
-      const contentReveal = panel?.querySelector('[data-content-reveal]') as HTMLElement;
-      const mediaContainer = panel?.querySelector('[data-media-container]') as HTMLElement;
-      const projectTitle = panel?.querySelector('[data-project-title]') as HTMLElement;
-      
-      if (!panel || !contentReveal || !mediaContainer) return;
+interface TileProps extends TileData {
+  isDragging?: boolean;
+}
 
-      // Set initial states
-      gsap.set(contentReveal.children, {
-        y: 30,
-        opacity: 0
-      });
-      
-      gsap.set(mediaContainer, {
-        opacity: 0,
-        scale: 0.95
-      });
+const TileContent: FC<{ tile: TileData; isDragging?: boolean }> = ({ tile, isDragging = false }) => (
+  <motion.div
+    className="w-[clamp(320px,35vw,480px)] h-[clamp(320px,35vw,480px)] border-[12px] border-[var(--frame-neutral)] box-content relative overflow-hidden cursor-grab active:cursor-grabbing"
+    style={{ 
+      backgroundColor: tile.backgroundColor,
+      opacity: isDragging ? 0.8 : 1,
+      transform: isDragging ? 'rotate(5deg)' : 'rotate(0deg)'
+    }}
+    initial={{ scale: 1 }}
+    whileHover={{ scale: isDragging ? 1 : 1.05, zIndex: 50 }}
+    transition={{ type: 'spring', stiffness: 300 }}
+  >
+    {/* Inner neon border */}
+    <div className="absolute inset-4 border-[6px] border-[var(--color-ultraviolet)] pointer-events-none" />
+    
+    {/* Floating SVGs */}
+    <FloatingClipArt src="/svgs/placeholder1.svg" />
+    <FloatingClipArt src="/svgs/placeholder2.svg" />
+    <FloatingClipArt src="/svgs/placeholder3.svg" />
+    
+    {/* Sticker */}
+    <span className="sticker absolute -right-4 -top-2 bg-white border-2 border-black px-1 py-0.5 text-[10px] font-bold leading-tight uppercase">
+      {tile.sticker}
+    </span>
+    
+    {/* Caption bar */}
+    <footer className="caption absolute bottom-0 left-0 w-full h-[var(--caption-height)] bg-[var(--color-acid-lime)] border-t-2 border-black flex items-center px-3 text-black font-bold text-xs uppercase">
+      {tile.caption}
+    </footer>
+  </motion.div>
+);
 
-      // Create ScrollTrigger for each panel
-      ScrollTrigger.create({
-        trigger: panel,
-        start: "top center",
-        end: "bottom center",
-        onEnter: () => {
-          // Content reveal animation - slow, serene 0.8s ease-out
-          const tl = gsap.timeline();
-          
-          // Text content slides up and fades in
-          tl.to(contentReveal.children, {
-            y: 0,
-            opacity: 1,
-            duration: 0.8,
-            ease: "power2.out",
-            stagger: 0.1
-          });
-          
-          // Media fades in after text
-          tl.to(mediaContainer, {
-            opacity: 1,
-            scale: 1,
-            duration: 0.8,
-            ease: "power2.out"
-          }, "-=0.4");
-        },
-        onLeave: () => {
-          // Optional fade out when leaving
-          gsap.to([contentReveal.children, mediaContainer], {
-            opacity: 0.3,
-            duration: 0.4,
-            ease: "power2.out"
-          });
-        },
-        onEnterBack: () => {
-          // Re-animate when scrolling back
-          gsap.to([contentReveal.children, mediaContainer], {
-            opacity: 1,
-            duration: 0.4,
-            ease: "power2.out"
-          });
-        }
-      });
+const DraggableTile: FC<TileProps> = ({ id, position, backgroundColor, sticker, caption, className = "" }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    isDragging,
+  } = useDraggable({
+    id,
+  });
 
-      // Simple scroll-based background effects without pinning
-      ScrollTrigger.create({
-        trigger: panel,
-        start: "top bottom",
-        end: "bottom top",
-        onUpdate: (self) => {
-          // Subtle background animation based on scroll progress
-          const progress = self.progress;
-          const rotation = progress * 180; // Reduced rotation for smoother effect
-          
-          // Create unique background effect per panel
-          if (index === 0) {
-            // Decay Engine - subtle noise pattern
-            panel.style.background = `radial-gradient(circle at ${50 + Math.sin(rotation * 0.01) * 5}% ${50 + Math.cos(rotation * 0.01) * 5}%, rgba(0,0,0,0.005) 0%, transparent 50%)`;
-          } else if (index === 1) {
-            // Anti-Algorithm - subtle grid distortion
-            panel.style.backgroundPosition = `${Math.sin(rotation * 0.02) * 1}px ${Math.cos(rotation * 0.02) * 1}px`;
-          } else if (index === 2) {
-            // Xerox Simulator - subtle film grain
-            panel.style.filter = `contrast(${1 + Math.sin(rotation * 0.01) * 0.01})`;
-          } else if (index === 3) {
-            // Temporal Glitch - subtle hue shift
-            panel.style.filter = `hue-rotate(${Math.sin(rotation * 0.01) * 1}deg)`;
-          }
-        }
-      });
+  const style = {
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+    left: position.x,
+    top: position.y,
+  };
 
-      // Hover effects
-      if (mediaContainer) {
-        mediaContainer.addEventListener('mouseenter', () => {
-          gsap.to(mediaContainer, {
-            scale: 1.02,
-            duration: 0.3,
-            ease: "power2.out"
-          });
-        });
-
-        mediaContainer.addEventListener('mouseleave', () => {
-          gsap.to(mediaContainer, {
-            scale: 1,
-            duration: 0.3,
-            ease: "power2.out"
-          });
-        });
-      }
-
-      // Title hover underline effect
-      if (projectTitle) {
-        const underline = document.createElement('div');
-        underline.className = 'absolute bottom-0 left-0 h-0.5 bg-black origin-left transform scale-x-0';
-        underline.style.width = '100%';
-        projectTitle.style.position = 'relative';
-        projectTitle.appendChild(underline);
-
-        projectTitle.addEventListener('mouseenter', () => {
-          gsap.to(underline, {
-            scaleX: 1,
-            duration: 0.3,
-            ease: "power2.out"
-          });
-        });
-
-        projectTitle.addEventListener('mouseleave', () => {
-          gsap.to(underline, {
-            scaleX: 0,
-            duration: 0.3,
-            ease: "power2.out"
-          });
-        });
-      }
-    });
-
-    return () => {
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
-    };
-  }, [projects]);
-
-  // Details expansion with ScrollTrigger refresh prevention
-  useEffect(() => {
-    projects.forEach((project) => {
-      const detailsContainer = document.querySelector(`[data-details-container="${project.id}"]`) as HTMLElement;
-      
-      if (!detailsContainer) return;
-
-      if (expandedProject === project.id) {
-        // Disable ScrollTrigger refresh during expansion
-        ScrollTrigger.config({ autoRefreshEvents: "none" });
-        
-        // Show details with simple fade-in
-        detailsContainer.style.display = 'block';
-        detailsContainer.style.opacity = '0';
-        detailsContainer.style.transform = 'translateY(-10px)';
-        detailsContainer.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
-        
-        // Force reflow
-        detailsContainer.offsetHeight;
-        
-        // Fade in
-        detailsContainer.style.opacity = '1';
-        detailsContainer.style.transform = 'translateY(0)';
-        
-        // Re-enable ScrollTrigger refresh after animation
-        setTimeout(() => {
-          ScrollTrigger.config({ autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize" });
-        }, 600);
-      } else {
-        // Hide details with fade-out
-        if (detailsContainer.style.display !== 'none') {
-          ScrollTrigger.config({ autoRefreshEvents: "none" });
-          
-          detailsContainer.style.transition = 'opacity 0.4s ease-out, transform 0.4s ease-out';
-          detailsContainer.style.opacity = '0';
-          detailsContainer.style.transform = 'translateY(-10px)';
-          
-          setTimeout(() => {
-            detailsContainer.style.display = 'none';
-            ScrollTrigger.config({ autoRefreshEvents: "visibilitychange,DOMContentLoaded,load,resize" });
-          }, 400);
-        }
-      }
-    });
-  }, [expandedProject, projects]);
-
-  // ESC key handler for closing expanded details
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && expandedProject) {
-        setExpandedProject(null);
-      }
-    };
-
-    if (expandedProject) {
-      document.addEventListener('keydown', handleEscape);
-      return () => document.removeEventListener('keydown', handleEscape);
-    }
-  }, [expandedProject]);
+  const tileData: TileData = { id, position, backgroundColor, sticker, caption, className };
 
   return (
-    <div className="bg-white" data-page="rotware">
-      <Navigation />
-      
-      {/* Initial View - Title Block */}
-      <div className="min-h-screen flex items-center justify-center px-8">
-        <div className="text-center space-y-8 max-w-4xl" data-animate>
-          <AnimatedHeading
-            text="ROTWARE"
-            className="text-6xl lg:text-8xl font-black text-black leading-none tracking-tight uppercase"
-            animationType="slide"
-            staggerDelay={0.05}
-          />
-          <div className="text-xl lg:text-2xl text-gray-600 leading-relaxed font-light">
-            Explorations in digital matter and interactive systems.
+    <article 
+      ref={setNodeRef} 
+      className={`absolute group z-10 ${className}`} 
+      style={style}
+      {...listeners}
+      {...attributes}
+    >
+      <TileContent tile={tileData} isDragging={isDragging} />
+    </article>
+  );
+};
+
+const Rotware: FC = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [tiles, setTiles] = useState<TileData[]>([
+    {
+      id: 'rotware',
+      position: { x: 60, y: 40 },
+      backgroundColor: 'var(--color-electric-magenta)',
+      sticker: 'FOLLOW ME ×4',
+      caption: 'ROTWARE'
+    },
+    {
+      id: 'heat-death',
+      position: { x: 420, y: 120 },
+      backgroundColor: 'var(--color-acid-lime)',
+      sticker: 'NEW!',
+      caption: 'HEAT DEATH'
+    },
+    {
+      id: 'peripheral-vision',
+      position: { x: 780, y: 80 },
+      backgroundColor: 'var(--color-ultraviolet)',
+      sticker: 'EXPERIMENTAL',
+      caption: 'PERIPHERAL VISION'
+    },
+    {
+      id: 'mission',
+      position: { x: 200, y: 320 },
+      backgroundColor: 'var(--color-electric-magenta)',
+      sticker: 'LIVE NOW',
+      caption: 'MISSION'
+    },
+    {
+      id: 'upcoming-events',
+      position: { x: 600, y: 400 },
+      backgroundColor: 'var(--color-acid-lime)',
+      sticker: 'COMING SOON',
+      caption: 'UPCOMING EVENTS',
+      className: 'md:hidden'
+    },
+    {
+      id: 'contact',
+      position: { x: 920, y: 360 },
+      backgroundColor: 'var(--color-ultraviolet)',
+      sticker: 'CONTACT',
+      caption: 'GET IN TOUCH',
+      className: 'md:hidden'
+    }
+  ]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 5,
+      },
+    })
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, delta } = event;
+    
+    if (delta) {
+      setTiles(currentTiles => 
+        currentTiles.map(tile => 
+          tile.id === active.id 
+            ? { 
+                ...tile, 
+                position: { 
+                  x: tile.position.x + delta.x, 
+                  y: tile.position.y + delta.y 
+                } 
+              }
+            : tile
+        )
+      );
+    }
+    
+    setActiveId(null);
+  };
+
+  const activeTile = activeId ? tiles.find(tile => tile.id === activeId) : null;
+  
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    const tileElements = containerRef.current.querySelectorAll('article');
+    
+    // Set initial state
+    gsap.set(tileElements, {
+      y: -50,
+      opacity: 0
+    });
+    
+    // Staggered drop animation
+    gsap.to(tileElements, {
+      y: 0,
+      opacity: 1,
+      duration: 0.8,
+      ease: "power2.out",
+      stagger: 0.08
+    });
+    
+    return () => {
+      gsap.killTweensOf(tileElements);
+    };
+  }, []);
+  
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="relative overflow-hidden bg-black min-h-screen" data-page="rotware">
+        <Navigation />
+        
+        {/* Background "SUN ROT" text */}
+        <h1 className="absolute inset-0 flex items-center justify-center text-[40vw] lg:text-[40vw] md:text-[60vw] max-md:text-[60vw] leading-none font-extrabold tracking-tight text-white pointer-events-none select-none z-0">
+          SUN ROT
+        </h1>
+        
+        {/* Content tiles */}
+        <div ref={containerRef} className="relative z-10">
+          {tiles.map((tile) => (
+            <DraggableTile
+              key={tile.id}
+              id={tile.id}
+              position={tile.position}
+              backgroundColor={tile.backgroundColor}
+              sticker={tile.sticker}
+              caption={tile.caption}
+              className={tile.className}
+            />
+          ))}
+          
+          {/* Mobile-only tiles */}
+          <div className="lg:hidden md:hidden flex flex-col items-center justify-center min-h-screen space-y-8 pt-20">
+            <DraggableTile
+              id="mobile-rotware"
+              position={{ x: 0, y: 0 }}
+              backgroundColor="var(--color-electric-magenta)"
+              sticker="MOBILE"
+              caption="ROTWARE"
+              className="relative"
+            />
+            <DraggableTile
+              id="mobile-heat-death"
+              position={{ x: 0, y: 0 }}
+              backgroundColor="var(--color-acid-lime)"
+              sticker="TOUCH"
+              caption="HEAT DEATH"
+              className="relative"
+            />
           </div>
         </div>
-      </div>
-
-      {/* Project Panels */}
-      {projects.map((project, index) => {
-        const isEven = index % 2 === 0;
         
-        return (
-          <div key={project.id} className="relative" style={{ zIndex: projects.length - index }}>
-            {/* Main Project Panel */}
-            <div 
-              className="min-h-[85vh] flex items-center px-8 lg:px-16 bg-white"
-              data-project-panel={project.id}
-            >
-              <div className="max-w-7xl mx-auto w-full">
-                <div className={`grid lg:grid-cols-2 gap-16 items-center ${
-                  isEven ? '' : 'lg:grid-flow-col-dense'
-                }`}>
-                  
-                  {/* Text Content */}
-                  <div className={`space-y-6 ${isEven ? '' : 'lg:col-start-2'}`}>
-                    <div className="space-y-4" data-content-reveal>
-                      <h2 
-                        className="text-4xl lg:text-6xl font-bold text-black uppercase leading-tight hover:cursor-pointer"
-                        data-project-title
-                      >
-                        {project.title}
-                      </h2>
-                      
-                      <p className="text-lg lg:text-xl text-gray-700 leading-relaxed max-w-lg">
-                        {project.description}
-                      </p>
-                      
-                      <div className="inline-flex items-center px-4 py-2 bg-gray-100 rounded-full">
-                        <span className="text-sm font-semibold text-gray-800 uppercase tracking-wide">
-                          STATUS: {project.status}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {/* Details Button */}
-                    <button
-                      onClick={() => setExpandedProject(expandedProject === project.id ? null : project.id)}
-                      className="flex items-center space-x-2 text-gray-600 hover:text-black transition-colors"
-                    >
-                      <span className="text-lg font-bold">{expandedProject === project.id ? '−' : '+'}</span>
-                      <span className="text-sm uppercase tracking-wide font-semibold">
-                        {expandedProject === project.id ? 'CLOSE' : 'DETAILS'}
-                      </span>
-                    </button>
-                  </div>
-                  
-                  {/* Media Container */}
-                  <div className={`${isEven ? 'lg:col-start-2' : 'lg:col-start-1'}`}>
-                    <div 
-                      className="aspect-[4/3] bg-gray-50 border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:scale-[1.02] transition-transform duration-300"
-                      data-media-container
-                    >
-                      <img 
-                        src={project.mediaUrl} 
-                        alt={project.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Inline Details Section */}
-                <div 
-                  className="overflow-visible"
-                  data-details-container={project.id}
-                  style={{ display: 'none' }}
-                >
-                  <div className="pt-12 px-8 lg:px-16" data-details-content>
-                    <div className="max-w-7xl mx-auto">
-                      <div className="border-t border-gray-200 pt-8">
-                        <div className="grid lg:grid-cols-3 gap-8">
-                          {/* Technical Details */}
-                          <div className="space-y-4">
-                            <h4 className="text-lg font-bold text-black uppercase tracking-wide">
-                              Tech Stack
-                            </h4>
-                            <div className="space-y-2">
-                              {project.details.techStack.map((tech, idx) => (
-                                <div 
-                                  key={idx}
-                                  className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded inline-block mr-2 mb-2"
-                                >
-                                  {tech}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Team Information */}
-                          <div className="space-y-4">
-                            <h4 className="text-lg font-bold text-black uppercase tracking-wide">
-                              Team
-                            </h4>
-                            <div className="space-y-2">
-                              {project.details.team.map((member, idx) => (
-                                <div key={idx} className="text-gray-700 text-sm">
-                                  {member}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          {/* Timeline */}
-                          <div className="space-y-4">
-                            <h4 className="text-lg font-bold text-black uppercase tracking-wide">
-                              Timeline
-                            </h4>
-                            <div className="text-gray-700 text-sm">
-                              {project.details.timeline}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        {/* Drag overlay for smooth dragging experience */}
+        <DragOverlay>
+          {activeTile ? (
+            <div className="z-50">
+              <TileContent tile={activeTile} isDragging={true} />
             </div>
-          </div>
-        );
-      })}
-
-    </div>
+          ) : null}
+        </DragOverlay>
+      </div>
+    </DndContext>
   );
 };
 
