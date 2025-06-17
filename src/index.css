@@ -79,6 +79,13 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  
+  /* Rotware collage theming tokens */
+  --frame-neutral: #9B9B9B;
+  --color-acid-lime: #E4FF3C;
+  --color-electric-magenta: #FF3CDA;
+  --color-ultraviolet: #7B25FF;
+  --caption-height: 40px;
 }
 
 .dark {
@@ -654,12 +661,12 @@ html {
 
 /* FlowingMenu Required Animations */
 @keyframes marquee {
-  from { transform: translateX(0%); }
-  to { transform: translateX(-50%); }
+  from { transform: translateY(0%); }
+  to { transform: translateY(-25%); }
 }
 
 .animate-marquee {
-  animation: marquee 15s linear infinite;
+  animation: marquee 12s linear infinite;
 }
 
 /* Additional translate utility for FlowingMenu */
@@ -698,4 +705,19 @@ html {
 
 .animate-glitch-before {
   animation: glitch var(--before-duration) infinite linear alternate-reverse;
+}
+
+/* Rotware collage animations */
+@keyframes float {
+  from { transform: translateY(-8px); }
+  to   { transform: translateY(8px); }
+}
+
+.sticker { 
+  animation: wiggle 1.2s ease-in-out infinite alternate; 
+}
+
+@keyframes wiggle {
+  from { transform: rotate(-3deg); }
+  to   { transform: rotate(3deg); }
 }
