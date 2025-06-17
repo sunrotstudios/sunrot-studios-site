@@ -39,11 +39,11 @@ const MenuItem: React.FC<MenuItemProps> = ({ link, text, image }) => {
     mouseY: number,
     width: number,
     height: number,
-  ): "top" | "bottom" => {
-    const topEdgeDist = Math.pow(mouseX - width / 2, 2) + Math.pow(mouseY, 2);
-    const bottomEdgeDist =
-      Math.pow(mouseX - width / 2, 2) + Math.pow(mouseY - height, 2);
-    return topEdgeDist < bottomEdgeDist ? "top" : "bottom";
+  ): "left" | "right" => {
+    const leftEdgeDist = Math.pow(mouseX, 2) + Math.pow(mouseY - height / 2, 2);
+    const rightEdgeDist =
+      Math.pow(mouseX - width, 2) + Math.pow(mouseY - height / 2, 2);
+    return leftEdgeDist < rightEdgeDist ? "left" : "right";
   };
 
   const handleMouseEnter = (ev: React.MouseEvent<HTMLAnchorElement>) => {
@@ -58,9 +58,9 @@ const MenuItem: React.FC<MenuItemProps> = ({ link, text, image }) => {
     );
 
     const tl = gsap.timeline({ defaults: animationDefaults });
-    tl.set(marqueeRef.current, { y: edge === "top" ? "-101%" : "101%" })
-      .set(marqueeInnerRef.current, { y: edge === "top" ? "101%" : "-101%" })
-      .to([marqueeRef.current, marqueeInnerRef.current], { y: "0%" });
+    tl.set(marqueeRef.current, { x: edge === "left" ? "-101%" : "101%" })
+      .set(marqueeInnerRef.current, { x: edge === "left" ? "101%" : "-101%" })
+      .to([marqueeRef.current, marqueeInnerRef.current], { x: "0%" });
   };
 
   const handleMouseLeave = (ev: React.MouseEvent<HTMLAnchorElement>) => {
@@ -75,33 +75,40 @@ const MenuItem: React.FC<MenuItemProps> = ({ link, text, image }) => {
     );
 
     const tl = gsap.timeline({ defaults: animationDefaults }) as TimelineMax;
-    tl.to(marqueeRef.current, { y: edge === "top" ? "-101%" : "101%" }).to(
+    tl.to(marqueeRef.current, { x: edge === "left" ? "-101%" : "101%" }).to(
       marqueeInnerRef.current,
-      { y: edge === "top" ? "101%" : "-101%" },
+      { x: edge === "left" ? "101%" : "-101%" },
     );
   };
 
   const repeatedMarqueeContent = React.useMemo(() => {
-    return Array.from({ length: 4 }).map((_, idx) => (
-      <React.Fragment key={idx}>
-        <span className="text-[#060010] uppercase font-normal text-[4vh] leading-[1.2] p-[1vh_1vw_0]">
+    const singleContent = (
+      <div className="flex flex-col items-center justify-center py-[2vh] px-[2vw]">
+        <span className="text-black uppercase font-normal text-[4vh] leading-[1.2] mb-[1vh] text-center">
           {text}
         </span>
         <div
-          className="w-[200px] h-[7vh] my-[2em] mx-[2vw] p-[1em_0] rounded-[50px] bg-cover bg-center"
+          className="w-[12vh] h-[12vh] rounded-[50px] bg-cover bg-center border-2 border-black"
           style={{ backgroundImage: `url(${image})` }}
         />
+      </div>
+    );
+    
+    // Create seamless loop by duplicating content multiple times
+    return Array.from({ length: 8 }).map((_, idx) => (
+      <React.Fragment key={idx}>
+        {singleContent}
       </React.Fragment>
     ));
   }, [text, image]);
 
   return (
     <div
-      className="flex-1 relative overflow-hidden text-center shadow-[0_-1px_0_0_#fff]"
+      className="flex-1 relative overflow-hidden text-center shadow-[0_-1px_0_0_#000]"
       ref={itemRef}
     >
       <a
-        className="flex items-center justify-center h-full relative cursor-pointer uppercase no-underline font-semibold text-white text-[4vh] hover:text-[#060010] focus:text-white focus-visible:text-[#060010]"
+        className="flex items-center justify-center h-full relative cursor-pointer uppercase no-underline font-semibold text-black text-[4vh] hover:text-black focus:text-black focus-visible:text-black"
         href={link}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -112,8 +119,8 @@ const MenuItem: React.FC<MenuItemProps> = ({ link, text, image }) => {
         className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none bg-white translate-y-[101%]"
         ref={marqueeRef}
       >
-        <div className="h-full w-[200%] flex" ref={marqueeInnerRef}>
-          <div className="flex items-center relative h-full w-[200%] will-change-transform animate-marquee">
+        <div className="w-full h-[400%] flex flex-col" ref={marqueeInnerRef}>
+          <div className="flex flex-col items-center relative w-full h-[400%] will-change-transform animate-marquee">
             {repeatedMarqueeContent}
           </div>
         </div>
