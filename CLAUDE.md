@@ -48,7 +48,7 @@ npm run preview
 - **Routing**: React Router DOM 7 with flat route structure
 - **3D Graphics**: Three.js and OGL (for future enhancements)
 - **UI**: Custom components following brutalist minimalist design principles
-- **Typography**: PP Mondwest Regular (custom font in `public/fonts/`)
+- **Typography**: inkct (primary brutalist) and BootzyTM (body text) custom fonts
 
 ## Project Architecture
 
@@ -81,14 +81,15 @@ All routes are defined in `src/App.tsx` and render full-page view components wra
 
 ## Design Philosophy
 
-This project follows a **brutalist minimalist aesthetic** inspired by punk culture and underground movements:
+This project follows a **pure brutalist minimalist aesthetic** embodying the "Cultural tech for the beautifully unmarketable" philosophy:
 
 ### Visual Design System
-- **Colors**: Exclusively black, white, and gray monochromatic palette
-- **Typography**: Bold, aggressive typefaces conveying underground feel with generous spacing
-- **Layout**: Sparse layouts with substantial negative space and airy, uncluttered feel
-- **UI Elements**: Clean rectangles, generous padding, subtle shadows and borders
-- **Interactivity**: Clean, impactful hover and click interactions
+- **Colors**: Stark black text on pure white backgrounds - no grays, no gradients, absolute contrast
+- **Typography**: Massive, bold typefaces (`inkct` primary, `BootzyTM` body) with dramatic scaling and generous spacing
+- **Layout**: Ultra-minimal centered content with vast white space and singular focal elements
+- **UI Elements**: Corner-positioned navigation, clean geometric shapes, zero ornamentation
+- **Interactivity**: Purposeful hover states and smooth transitions that enhance focus
+- **Philosophy**: Extreme simplicity meets maximum impact - every element serves a purpose
 
 ### Animation Principles
 - **Performance**: Smooth and beautiful GSAP transitions prioritizing fluid motion
@@ -106,12 +107,12 @@ This project follows a **brutalist minimalist aesthetic** inspired by punk cultu
 - Uses `data-page` attribute to target page elements for animations
 
 ### Navigation Component
-`src/components/ui/Navigation.tsx` - Context-aware navigation system:
-- **Home Page**: Shows "EVENTS" in top-left corner (not "HOME")
-- **Other Pages**: Current page's navigation button is hidden from corners
-- **Corner Positioning**: EVENTS (top-left), ABOUT (top-right), ROTWARE (bottom-left), PERIPHERAL VISION (bottom-right)
-- Integrates with TransitionContext for smooth page transitions
-- Disabled state during transitions to prevent user conflicts
+`src/components/ui/Navigation.tsx` - Ultra-minimal corner navigation system:
+- **Clean Positioning**: Fixed corners with small, uppercase text labels
+- **Context Awareness**: Current page button is hidden, maintains visual balance
+- **Corner Layout**: EVENTS/HOME (top-left), ABOUT (top-right), ROTWARE (bottom-left), PERIPHERAL VISION (bottom-right)
+- **Subtle Interactions**: Gray-to-black hover states, minimal touch feedback
+- **Seamless Integration**: Works with TransitionContext for smooth page changes
 
 ### Animation Hooks
 - `useContentAnimations` - Staggered element reveal animations
@@ -193,10 +194,10 @@ ROTWARE is a **scroll-driven gallery** showcasing experimental software projects
 - **Component Structure**: Follow React 19 patterns with proper hooks usage
 
 ### Cultural Development Philosophy
-- **Authenticity over optimization** - Build genuinely useful and culturally relevant features
-- **Beauty over efficiency** - Prioritize aesthetic experience and emotional resonance
-- **Community over scale** - Serve specific creative communities deeply
-- **Experimentation over certainty** - Ship imperfect, evolving projects
+- **Absolute Minimalism** - Remove everything non-essential, keep only what serves the message
+- **Bold Simplicity** - Use massive typography and stark contrast to create immediate impact
+- **Cultural Resonance** - Build for the "beautifully unmarketable" - those who reject mainstream algorithms
+- **Purposeful Restraint** - Every element must earn its place through necessity, not decoration
 
 ### Important Conventions
 - All page view components must include `data-page` attribute for transitions
@@ -238,8 +239,9 @@ npm run lint        # ESLint code quality check
 - `srs-docs/BUSINESS_DOC.MD` - Company profile and business philosophy
 
 ### Media & Assets
-- `src/assets/media/` - GIF and image assets
-- `public/fonts/PPMondwest-Regular.otf` - Custom typography
+- `src/assets/gifs/` - GIF and image assets for visual content
+- `public/fonts/inkct.ttf` - Primary brutalist typography
+- `public/fonts/BootzyTM.ttf/.woff/.woff2` - Body text typography
 
 ## Security & Performance
 
@@ -258,4 +260,4 @@ npm run lint        # ESLint code quality check
 
 ---
 
-When working on this project, always reference the design principles and maintain the brutalist minimalist aesthetic throughout all components and interactions. Prioritize cultural resonance and aesthetic experience alongside technical functionality.
+When working on this project, embody the "Cultural tech for the beautifully unmarketable" philosophy through extreme minimalism, bold typography, and purposeful restraint. Every design decision should serve the cultural mission of amplifying independent creators who operate beyond mainstream algorithmic discovery.

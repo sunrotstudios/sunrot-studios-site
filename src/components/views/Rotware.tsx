@@ -1,289 +1,157 @@
-import { FC, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
-import { gsap } from 'gsap';
-import {
-  DndContext,
-  closestCenter,
-  useSensor,
-  useSensors,
-  PointerSensor,
-  TouchSensor,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  useDraggable,
-} from '@dnd-kit/core';
-import Navigation from '../ui/Navigation';
+import { FC, useState } from "react";
+import Navigation from "../ui/Navigation";
 
-const FloatingClipArt: FC<{ src: string; className?: string }> = ({ src, className = "" }) => (
-  <div 
-    className={`absolute pointer-events-none ${className}`}
-    style={{ 
-      animation: 'float 7s ease-in-out infinite alternate',
-      top: `${Math.random() * 60 + 10}%`,
-      left: `${Math.random() * 60 + 10}%`,
-    }}
-  >
-    <div className="w-8 h-8 bg-gray-300 border border-black flex items-center justify-center text-xs">
-      SVG
-    </div>
-  </div>
-);
-
-interface TileData {
+interface Project {
   id: string;
-  position: { x: number; y: number };
-  backgroundColor: string;
-  sticker: string;
-  caption: string;
-  className?: string;
+  title: string;
+  description: string;
+  status: string;
+  details: string;
+  techStack: string[];
+  category: string;
 }
 
-interface TileProps extends TileData {
-  isDragging?: boolean;
-}
-
-const TileContent: FC<{ tile: TileData; isDragging?: boolean }> = ({ tile, isDragging = false }) => (
-  <motion.div
-    className="w-[clamp(320px,35vw,480px)] h-[clamp(320px,35vw,480px)] border-[12px] border-[var(--frame-neutral)] box-content relative overflow-hidden cursor-grab active:cursor-grabbing"
-    style={{ 
-      backgroundColor: tile.backgroundColor,
-      opacity: isDragging ? 0.8 : 1,
-      transform: isDragging ? 'rotate(5deg)' : 'rotate(0deg)'
-    }}
-    initial={{ scale: 1 }}
-    whileHover={{ scale: isDragging ? 1 : 1.05, zIndex: 50 }}
-    transition={{ type: 'spring', stiffness: 300 }}
-  >
-    {/* Inner neon border */}
-    <div className="absolute inset-4 border-[6px] border-[var(--color-ultraviolet)] pointer-events-none" />
-    
-    {/* Floating SVGs */}
-    <FloatingClipArt src="/svgs/placeholder1.svg" />
-    <FloatingClipArt src="/svgs/placeholder2.svg" />
-    <FloatingClipArt src="/svgs/placeholder3.svg" />
-    
-    {/* Sticker */}
-    <span className="sticker absolute -right-4 -top-2 bg-white border-2 border-black px-1 py-0.5 text-[10px] font-bold leading-tight uppercase">
-      {tile.sticker}
-    </span>
-    
-    {/* Caption bar */}
-    <footer className="caption absolute bottom-0 left-0 w-full h-[var(--caption-height)] bg-[var(--color-acid-lime)] border-t-2 border-black flex items-center px-3 text-black font-bold text-xs uppercase">
-      {tile.caption}
-    </footer>
-  </motion.div>
-);
-
-const DraggableTile: FC<TileProps> = ({ id, position, backgroundColor, sticker, caption, className = "" }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    isDragging,
-  } = useDraggable({
-    id,
-  });
-
-  const style = {
-    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
-    left: position.x,
-    top: position.y,
-  };
-
-  const tileData: TileData = { id, position, backgroundColor, sticker, caption, className };
-
-  return (
-    <article 
-      ref={setNodeRef} 
-      className={`absolute group z-10 ${className}`} 
-      style={style}
-      {...listeners}
-      {...attributes}
-    >
-      <TileContent tile={tileData} isDragging={isDragging} />
-    </article>
-  );
-};
+const projects: Project[] = [
+  {
+    id: "1",
+    title: "FLUX",
+    description: "Decentralized event discovery platform",
+    status: "IN DEVELOPMENT",
+    details: "A peer-to-peer event discovery system that connects underground communities without algorithmic interference. Built for venues and artists who operate outside mainstream discovery channels.",
+    techStack: ["React", "Web3", "IPFS", "TypeScript"],
+    category: "PLATFORM"
+  },
+  {
+    id: "2", 
+    title: "MESH",
+    description: "Collaborative creative toolkit",
+    status: "PROTOTYPE",
+    details: "Real-time collaborative workspace for interdisciplinary creative projects. Enables seamless handoffs between designers, developers, and artists working on experimental media.",
+    techStack: ["WebRTC", "Canvas API", "Node.js", "Socket.io"],
+    category: "TOOL"
+  },
+  {
+    id: "3",
+    title: "DRIFT",
+    description: "Ambient data visualization engine",
+    status: "LIVE",
+    details: "Generative visualization system that transforms live data feeds into ambient, non-intrusive visual experiences. Used for installation work and live performance backgrounds.",
+    techStack: ["Three.js", "WebGL", "Python", "OSC"],
+    category: "ENGINE"
+  },
+  {
+    id: "4",
+    title: "VOID",
+    description: "Minimal social broadcasting tool",
+    status: "CONCEPT",
+    details: "Anti-social media platform focused on temporary, location-based anonymous broadcasts. Messages decay over time and distance, promoting ephemeral communication.",
+    techStack: ["Rust", "WebAssembly", "Geolocation API"],
+    category: "EXPERIMENT"
+  }
+];
 
 const Rotware: FC = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [tiles, setTiles] = useState<TileData[]>([
-    {
-      id: 'rotware',
-      position: { x: 60, y: 40 },
-      backgroundColor: 'var(--color-electric-magenta)',
-      sticker: 'FOLLOW ME ×4',
-      caption: 'ROTWARE'
-    },
-    {
-      id: 'heat-death',
-      position: { x: 420, y: 120 },
-      backgroundColor: 'var(--color-acid-lime)',
-      sticker: 'NEW!',
-      caption: 'HEAT DEATH'
-    },
-    {
-      id: 'peripheral-vision',
-      position: { x: 780, y: 80 },
-      backgroundColor: 'var(--color-ultraviolet)',
-      sticker: 'EXPERIMENTAL',
-      caption: 'PERIPHERAL VISION'
-    },
-    {
-      id: 'mission',
-      position: { x: 200, y: 320 },
-      backgroundColor: 'var(--color-electric-magenta)',
-      sticker: 'LIVE NOW',
-      caption: 'MISSION'
-    },
-    {
-      id: 'upcoming-events',
-      position: { x: 600, y: 400 },
-      backgroundColor: 'var(--color-acid-lime)',
-      sticker: 'COMING SOON',
-      caption: 'UPCOMING EVENTS',
-      className: 'md:hidden'
-    },
-    {
-      id: 'contact',
-      position: { x: 920, y: 360 },
-      backgroundColor: 'var(--color-ultraviolet)',
-      sticker: 'CONTACT',
-      caption: 'GET IN TOUCH',
-      className: 'md:hidden'
-    }
-  ]);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 200,
-        tolerance: 5,
-      },
-    })
-  );
-
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string);
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, delta } = event;
-    
-    if (delta) {
-      setTiles(currentTiles => 
-        currentTiles.map(tile => 
-          tile.id === active.id 
-            ? { 
-                ...tile, 
-                position: { 
-                  x: tile.position.x + delta.x, 
-                  y: tile.position.y + delta.y 
-                } 
-              }
-            : tile
-        )
-      );
-    }
-    
-    setActiveId(null);
-  };
-
-  const activeTile = activeId ? tiles.find(tile => tile.id === activeId) : null;
-  
-  useEffect(() => {
-    if (!containerRef.current) return;
-    
-    const tileElements = containerRef.current.querySelectorAll('article');
-    
-    // Set initial state
-    gsap.set(tileElements, {
-      y: -50,
-      opacity: 0
-    });
-    
-    // Staggered drop animation
-    gsap.to(tileElements, {
-      y: 0,
-      opacity: 1,
-      duration: 0.8,
-      ease: "power2.out",
-      stagger: 0.08
-    });
-    
-    return () => {
-      gsap.killTweensOf(tileElements);
-    };
-  }, []);
-  
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="relative overflow-hidden bg-black min-h-screen" data-page="rotware">
-        <Navigation />
+    <div className="relative bg-white h-screen overflow-hidden" data-page="rotware">
+      <Navigation />
+      
+      {/* Main content container */}
+      <div className="h-screen flex flex-col lg:flex-row px-4 lg:px-16 py-8 lg:py-16 gap-8 lg:gap-16">
         
-        {/* Background "SUN ROT" text */}
-        <h1 className="absolute inset-0 flex items-center justify-center text-[40vw] lg:text-[40vw] md:text-[60vw] max-md:text-[60vw] leading-none font-extrabold tracking-tight text-white pointer-events-none select-none z-0">
-          SUN ROT
-        </h1>
-        
-        {/* Content tiles */}
-        <div ref={containerRef} className="relative z-10">
-          {tiles.map((tile) => (
-            <DraggableTile
-              key={tile.id}
-              id={tile.id}
-              position={tile.position}
-              backgroundColor={tile.backgroundColor}
-              sticker={tile.sticker}
-              caption={tile.caption}
-              className={tile.className}
-            />
-          ))}
-          
-          {/* Mobile-only tiles */}
-          <div className="lg:hidden md:hidden flex flex-col items-center justify-center min-h-screen space-y-8 pt-20">
-            <DraggableTile
-              id="mobile-rotware"
-              position={{ x: 0, y: 0 }}
-              backgroundColor="var(--color-electric-magenta)"
-              sticker="MOBILE"
-              caption="ROTWARE"
-              className="relative"
-            />
-            <DraggableTile
-              id="mobile-heat-death"
-              position={{ x: 0, y: 0 }}
-              backgroundColor="var(--color-acid-lime)"
-              sticker="TOUCH"
-              caption="HEAT DEATH"
-              className="relative"
-            />
+        {/* Left Column - Title and Vision */}
+        <div className="flex-1 flex flex-col justify-center items-center mb-8 lg:mb-0">
+          <div className="w-full max-w-xl">
+            <h1 className="text-[clamp(2.5rem,8vw,6rem)] font-black text-black leading-[0.85] tracking-tight mb-6 lg:mb-8">
+              ROTWARE
+            </h1>
+            <p className="text-lg lg:text-xl text-black mb-4 lg:mb-6 leading-relaxed">
+              Experimental software for the beautifully unmarketable
+            </p>
+            <p className="text-base lg:text-lg text-black leading-relaxed opacity-80">
+              Building tools and platforms for creative communities that operate beyond algorithmic discovery. 
+              Custom software solutions for artists, venues, and collectives who resist mainstream gatekeeping.
+            </p>
           </div>
         </div>
-        
-        {/* Drag overlay for smooth dragging experience */}
-        <DragOverlay>
-          {activeTile ? (
-            <div className="z-50">
-              <TileContent tile={activeTile} isDragging={true} />
-            </div>
-          ) : null}
-        </DragOverlay>
+
+        {/* Right Column - Projects Grid */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+            {projects.map((project) => (
+              <div
+                key={project.id}
+                onClick={() => setSelectedProject(project)}
+                className="border-2 border-black bg-white p-6 cursor-pointer hover:bg-black hover:text-white transition-all duration-200 h-56 lg:h-64 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="text-xs font-medium mb-2 opacity-60">
+                    {project.category}
+                  </div>
+                  <h3 className="text-base lg:text-lg font-black mb-2 leading-tight">
+                    {project.title}
+                  </h3>
+                  <p className="text-xs leading-relaxed mb-3">
+                    {project.description}
+                  </p>
+                </div>
+                <div className="text-xs font-medium">
+                  {project.status}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-    </DndContext>
+
+      {/* Project Details Modal */}
+      {selectedProject && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-8 z-50">
+          <div className="bg-white border-4 border-black max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-8">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <div className="text-xs font-medium mb-2 opacity-60">
+                    {selectedProject.category}
+                  </div>
+                  <h2 className="text-3xl font-black mb-2">
+                    {selectedProject.title}
+                  </h2>
+                  <div className="text-sm font-medium">
+                    STATUS: {selectedProject.status}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedProject(null)}
+                  className="text-2xl font-black hover:opacity-70"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <p className="text-lg leading-relaxed mb-6">
+                {selectedProject.details}
+              </p>
+              
+              <div>
+                <h3 className="text-sm font-black mb-3">TECH STACK</h3>
+                <div className="flex flex-wrap gap-2">
+                  {selectedProject.techStack.map((tech) => (
+                    <span
+                      key={tech}
+                      className="px-3 py-1 border border-black text-xs font-medium"
+                    >
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 

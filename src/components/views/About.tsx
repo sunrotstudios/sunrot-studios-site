@@ -9,14 +9,13 @@ const About: FC = () => {
     <div className="min-h-screen bg-white" data-page="about">
       <Navigation />
       
-      {/* Massive top spacing to push content down */}
-      <div className="h-64" data-animate></div>
-      
-      {/* Main Content - Positioned in bottom portion */}
-      <div className="px-8 pb-16" data-animate>
-        <p className="text-8xl leading-tight text-black font-normal" data-animate="text">
-          Founded in 2019, Sun Rot Studios is a creative studio and cultural engine based in Venice Beach, California<sup>1</sup>, providing all aspects of experimental software, surreal events, and independent artist support.
-        </p>
+      {/* Central focal content */}
+      <div className="flex items-center justify-center min-h-screen px-4 sm:px-8">
+        <div className="text-center max-w-6xl" data-animate>
+          <p className="text-3xl sm:text-5xl lg:text-7xl xl:text-8xl leading-tight text-black font-black" data-animate="text">
+            Cultural tech for the beautifully unmarketable.
+          </p>
+        </div>
       </div>
     </div>
   );

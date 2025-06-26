@@ -1,4 +1,4 @@
-Beesides Product Requirements Document (v1)
+# Beesides Product Requirements Document (v1)
 
 1. Executive Summary
    Beesides is a community-driven platform for album-focused music discovery, built on the belief that the best recommendations come from real people—not algorithms. By centering the experience around personal curation, rich user profiles, and social interaction, Beesides helps users build a meaningful relationship with music and each other.

@@ -19,8 +19,10 @@ const Navigation: FC = () => {
   const getNavItemClasses = (path: string) => {
     const isActive = currentPath === path;
     return clsx(
-      "text-sm font-medium transition-colors",
-      isActive ? "text-black cursor-default" : "text-gray-400 hover:text-gray-600"
+      "text-xs sm:text-sm font-medium transition-all duration-200 min-h-12 min-w-12 sm:min-h-auto sm:min-w-auto flex items-center justify-center sm:block px-2 py-2 rounded-sm touch-manipulation",
+      isActive 
+        ? "text-black cursor-default" 
+        : "text-gray-400 hover:text-gray-600 active:text-black active:scale-95 hover:bg-gray-50 active:bg-gray-100"
     );
   };
 
@@ -28,7 +30,7 @@ const Navigation: FC = () => {
     <>
       {/* Top Left - EVENTS (hidden when on events page) or HOME (when on events page) */}
       {currentPath !== '/events' ? (
-        <nav className="fixed top-8 left-8 z-50">
+        <nav className="fixed top-4 left-4 sm:top-8 sm:left-8 z-50">
           <button
             onClick={(e) => handleNavClick(e, '/events', 'top-left')}
             className={getNavItemClasses('/events')}
@@ -38,7 +40,7 @@ const Navigation: FC = () => {
           </button>
         </nav>
       ) : (
-        <nav className="fixed top-8 left-8 z-50">
+        <nav className="fixed top-4 left-4 sm:top-8 sm:left-8 z-50">
           <button
             onClick={(e) => handleNavClick(e, '/', 'top-left')}
             className={getNavItemClasses('/')}
@@ -51,7 +53,7 @@ const Navigation: FC = () => {
 
       {/* Top Right - ABOUT (hidden when on about page) */}
       {currentPath !== '/about' && (
-        <nav className="fixed top-8 right-8 z-50">
+        <nav className="fixed top-4 right-4 sm:top-8 sm:right-8 z-50">
           <button
             onClick={(e) => handleNavClick(e, '/about', 'top-right')}
             className={getNavItemClasses('/about')}
@@ -64,7 +66,7 @@ const Navigation: FC = () => {
 
       {/* Bottom Left - ROTWARE (hidden when on rotware page) */}
       {currentPath !== '/rotware' && (
-        <nav className="fixed bottom-8 left-8 z-50">
+        <nav className="fixed bottom-4 left-4 sm:bottom-8 sm:left-8 z-50">
           <button
             onClick={(e) => handleNavClick(e, '/rotware', 'bottom-left')}
             className={getNavItemClasses('/rotware')}
@@ -77,13 +79,14 @@ const Navigation: FC = () => {
 
       {/* Bottom Right - PERIPHERAL VISION (hidden when on peripheral-vision page) */}
       {currentPath !== '/peripheral-vision' && (
-        <nav className="fixed bottom-8 right-8 z-50">
+        <nav className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50">
           <button
             onClick={(e) => handleNavClick(e, '/peripheral-vision', 'bottom-right')}
             className={getNavItemClasses('/peripheral-vision')}
             disabled={isTransitioning}
           >
-            PERIPHERAL VISION
+            <span className="block sm:hidden">VISION</span>
+            <span className="hidden sm:block">PERIPHERAL VISION</span>
           </button>
         </nav>
       )}

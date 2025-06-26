@@ -1,0 +1,50 @@
+/* Retro Animation Classes */
+
+/* Initial hidden state for retro elements */
+.retro-tile-hidden {
+  opacity: 0;
+  transform: scale(0);
+}
+
+/* Visible state with smooth transition */
+.retro-tile-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Control button hidden state */
+.retro-button-hidden {
+  opacity: 0;
+  transform: scale(0);
+}
+
+/* Control button visible state */
+.retro-button-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Ensure consistent window sizing */
+.retro-window-container {
+  width: 320px;
+  height: 320px;
+}
+
+/* Prevent flash of unstyled content */
+.retro-content-loading .retro-tile-hidden,
+.retro-content-loading .retro-button-hidden {
+  visibility: hidden;
+}
+
+/* Performance optimizations */
+.retro-tile-visible,
+.retro-button-visible {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Disable transitions when dragging for performance */
+.retro-dragging {
+  transition: none !important;
+}
